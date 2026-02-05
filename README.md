@@ -2,13 +2,13 @@
 
 ## What Is This?
 
-ShellClaw, (very) loosely based off of OpenClaw, is a team of AI agents that coordinate by writing files to a shared folder. There's no fancy framework — just bash scripts that call an LLM, log what they do, and save what they learn. Other agents can read those files and build on that knowledge.
+Shellclaw is a reference implementation showing how the `agen-*` primitives compose into a working multi-agent system. A team of AI agents coordinate by writing files to a shared folder — no framework, no daemon, just bash scripts calling composable tools.
+
+**Why shell primitives?** The Unix philosophy — small tools that do one thing, work together via text streams, and remain inspectable — scales. The `agen-*` suite applies this to AI agents: instead of opaque frameworks, you get composable programs that work with `grep`, `jq`, `cron`, and everything else you already know.
 
 Most AI agent systems are black boxes. You ask them to do something, magic happens, you get a result. Shellclaw is the opposite. Every action is logged. Every memory is a file you can read. Every decision is traceable. You can `grep` through what your agents did, `diff` their memories between runs, and `cat` their execution traces at 3am when something breaks.
 
-The terminal is already an agent interface — we've just been the agents. Unix gives us processes for isolation, files for state, pipes for communication, and exit codes for verification. AI agents don't need new infrastructure. They need the infrastructure we've had for 50 years.
-
-This is a POC reference implementiation demonstrating that you CAN build observable, auditable AI agent systems from Unix primitives. This is an experiment and I welcome input and pull requests.
+This is a POC reference implementation demonstrating that you CAN build observable, auditable AI agent systems from Unix primitives. This is an experiment and I welcome input and pull requests.
 
 ---
 
