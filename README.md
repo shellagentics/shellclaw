@@ -2,13 +2,13 @@
 
 ## What Is This?
 
-Shellclaw is a reference implementation showing how the `agen-*` primitives compose into a working multi-agent system. A team of AI agents coordinate by writing files to a shared folder — no framework, no daemon, just bash scripts calling composable tools.
+Shellclaw is a reference implementation showing how the `agen-*` primitives compose into a working multi-agent system. A team of AI agents coordinate by writing files to a shared folder — no framework, no daemon, just bash scripts calling composable tools. Most AI agent systems are black boxes. You ask them to do something, magic happens, you get a result. Shellclaw is the opposite. Every action is logged. Every memory is a file you can read. Every decision is traceable. You can `grep` through what your agents did, `diff` their memories between runs, and `cat` their execution traces at 3am when something breaks. This is a POC reference implementation demonstrating that you CAN build observable, auditable AI agent systems from Unix primitives. This is an experiment and I welcome input and pull requests.
 
-**Why shell primitives?** The Unix philosophy — small tools that do one thing, work together via text streams, and remain inspectable — scales. The `agen-*` suite applies this to AI agents: instead of opaque frameworks, you get composable programs that work with `grep`, `jq`, `cron`, and everything else you already know.
+## Shell Agentics
 
-Most AI agent systems are black boxes. You ask them to do something, magic happens, you get a result. Shellclaw is the opposite. Every action is logged. Every memory is a file you can read. Every decision is traceable. You can `grep` through what your agents did, `diff` their memories between runs, and `cat` their execution traces at 3am when something breaks.
+Part of the [Shell Agentics](https://github.com/shellagentics) toolkit - small programs that compose via pipes and text streams to build larger agentic structures using Unix primitives. No frameworks. No magic. Total observability.
 
-This is a POC reference implementation demonstrating that you CAN build observable, auditable AI agent systems from Unix primitives. This is an experiment and I welcome input and pull requests.
+When you or another agent want to know what an agent did, you check the execution trace. Every command, every decision, every timestamp is inspectable with Unix tools. It's all Unix and it's all in the shell.
 
 ---
 
