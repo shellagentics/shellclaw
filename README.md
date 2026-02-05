@@ -72,19 +72,20 @@ Lore orchestrates and synthesizes. It reads learnings from all other agents and 
 
 ## How Agents Work
 
-Each agent script follows the same pattern:
+Each agent script follows an 8-step pattern:
 
 ```
 1. LOG      the incoming request (agen-log)
 2. LOAD     persistent memory (agen-memory read)
-3. GATHER   any additional context (team learnings for Lore)
-4. COMPOSE  the full context as stdin
-5. CALL     the LLM (agen --system-file)
-6. LOG      the response (agen-log)
-7. EXTRACT  learnings and save to memory
-8. SHARE    learnings to shared filesystem
-9. OUTPUT   the result
+3. COMPOSE  the full context as stdin
+4. CALL     the LLM (agen --system-file)
+5. LOG      the response (agen-log)
+6. EXTRACT  learnings and save to memory
+7. SHARE    learnings to shared filesystem
+8. OUTPUT   the result
 ```
+
+Lore adds a 9th step: **GATHER team learnings** (inserted between LOAD and COMPOSE). This is a specialization, not a universal step — specialist agents like Data and Aurora work from their own memory; only synthesizers need cross-agent context.
 
 No magic. Just bash calling bash calling an LLM.
 
@@ -205,7 +206,7 @@ Plus standard Unix utilities: `bash`, `jq`, `date`, `cat`, `grep`.
 
 ## Comparison with OpenClaw
 
-OpenClaw is a 147K-star personal AI assistant with 12+ platform integrations. Shellclaw achieves similar multi-agent coordination through different means:
+[OpenClaw](https://github.com/openclaw/openclaw) is a 168K-star personal AI assistant with 13+ messaging platform integrations. Shellclaw achieves similar multi-agent coordination through different means:
 
 | Aspect | OpenClaw | Shellclaw |
 |--------|----------|-----------|
@@ -229,6 +230,22 @@ Unix gave us:
 - **Exit codes** for verification (0 or not-0)
 
 AI agents don't need new infrastructure. They need to compose with the infrastructure we have. Shellclaw is a proof of concept demonstrating this thesis.
+
+## Security Considerations
+
+Shell Agentics treats the LLM as an **oracle, not a driver**. The LLM answers questions; it doesn't make decisions about tool use. Decisions live in auditable shell scripts. This is a deliberate security architecture.
+
+Research on inter-agent trust exploitation (Lupinacci et al., 2025) found that 82.4% of LLMs will execute malicious commands received from peer agents — commands they'd refuse from humans. In multi-agent systems where agents communicate through tool calls, this is catastrophic. In Shell Agentics, agents communicate through **text in files**, not tool calls through trust boundaries.
+
+### Guidelines
+
+**Never eval LLM output.** Skills should parse agen's output as data, not execute it as code. If the skill needs the LLM to choose an action, use a constrained vocabulary — the output must match one of N known strings.
+
+**Treat soul files as immutable at runtime.** If an attacker can modify a soul file, they've modified the agent's identity. Mount `souls/` read-only in production, or checksum before use.
+
+**Run agents with minimal privileges.** Each agent should be a separate Unix user with write access only to its own directories. This contains the blast radius of a compromised agent.
+
+**Validate shared filesystem inputs.** Content in `shared/learnings/` crosses a trust boundary. A compromised agent can write content designed to manipulate peers. Consider signing or checksumming inter-agent messages.
 
 ## What's NOT Here
 
