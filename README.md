@@ -2,13 +2,13 @@
 
 ## What Is This?
 
-**Plain English:** Shellclaw is a team of AI agents that coordinate by writing files to a shared folder. There's no fancy framework — just bash scripts that call an LLM, log what they do, and save what they learn. Other agents can read those files and build on that knowledge.
+Shellclaw, (very) loosely based off of OpenClaw, is a team of AI agents that coordinate by writing files to a shared folder. There's no fancy framework — just bash scripts that call an LLM, log what they do, and save what they learn. Other agents can read those files and build on that knowledge.
 
-**What makes it different:** Most AI agent systems are black boxes. You ask them to do something, magic happens, you get a result. Shellclaw is the opposite. Every action is logged. Every memory is a file you can read. Every decision is traceable. You can `grep` through what your agents did, `diff` their memories between runs, and `cat` their execution traces at 3am when something breaks.
+Most AI agent systems are black boxes. You ask them to do something, magic happens, you get a result. Shellclaw is the opposite. Every action is logged. Every memory is a file you can read. Every decision is traceable. You can `grep` through what your agents did, `diff` their memories between runs, and `cat` their execution traces at 3am when something breaks.
 
-**The thesis:** The terminal is already an agent interface — we've just been the agents. Unix gave us processes for isolation, files for state, pipes for communication, and exit codes for verification. AI agents don't need new infrastructure. They need the infrastructure we've had for 50 years.
+The terminal is already an agent interface — we've just been the agents. Unix gives us processes for isolation, files for state, pipes for communication, and exit codes for verification. AI agents don't need new infrastructure. They need the infrastructure we've had for 50 years.
 
-**Is this production-ready?** No. This is a proof of concept demonstrating that you CAN build observable, auditable AI agent systems from Unix primitives. It's a reference implementation, not a product.
+This is a POC reference implementiation demonstrating that you CAN build observable, auditable AI agent systems from Unix primitives. This is an experiment and I welcome input and pull requests.
 
 ---
 
