@@ -2,7 +2,9 @@
 
 ## What Is This?
 
-Shellclaw is a reference implementation showing how the `agen-*` primitives compose into a working multi-agent system. A team of AI agents coordinate by writing files to a shared folder — no framework, no daemon, just bash scripts calling composable tools. Most AI agent systems are black boxes. You ask them to do something, magic happens, you get a result. Shellclaw is the opposite. Every action is logged. Every memory is a file you can read. Every decision is traceable. You can `grep` through what your agents did, `diff` their memories between runs, and `cat` their execution traces at 3am when something breaks. This is a POC reference implementation demonstrating that you CAN build observable, auditable AI agent systems from Unix primitives. This is an experiment and I welcome input and pull requests.
+Shellclaw is a reference implementation showing how the `agen-*` primitives compose into a working multi-agent system. Agents coordinate by writing files to a shared folder — no framework, no daemon, just bash scripts calling composable tools.
+
+Everything is inspectable. Every action is logged. Every memory is a file you can read. Every decision is traceable. You can `grep` through what your agents did, `diff` their memories between runs, and `cat` their execution traces.
 
 ## Shell Agentics
 
@@ -13,59 +15,42 @@ Part of the [Shell Agentics](https://github.com/shellagentics/shell-agentics) to
 ## Quick Start
 
 ```bash
-# Clone and enter
 git clone https://github.com/shellagentics/shellclaw
 cd shellclaw
 
-# Ensure primitives are available (or install them)
-# See: github.com/shellagentics/{agen,agen-log,agen-memory,agen-audit}
-
-# Run the demo
+# Run the demo (uses stub backend — no LLM calls, no API keys)
 ./demo.sh
+
+# Run with a real LLM
+AGEN_BACKEND=claude-code ./demo.sh
 ```
 
-The demo will:
-1. Ask the "data" agent about backup verification
-2. Ask the "aurora" agent about system health
-3. Ask the "lore" agent to synthesize team learnings
-4. Show you the complete audit trail
-5. Show you the agent memory state
+The demo runs agent-1, then agent-2 (which reads agent-1's shared learnings), and shows you the audit trail, memory state, and shared learnings.
 
 ## The Agents
 
-Shellclaw comes with three agents, each defined by a **soul file** (personality/instructions) and an **agent script** (orchestration logic).
+Shellclaw ships two generic agents that demonstrate the architecture. The agents are deliberately minimal — the point is the *pattern*, not the persona.
 
-### Data — The Backup Specialist
+### agent-1 — The Basic Pattern
 
-**Soul:** `souls/data.md`
-**Script:** `agents/data.sh`
+**Soul:** `souls/agent-1.md`
+**Script:** `agents/agent-1.sh`
 
-Data handles backup verification, checksum validation, and system monitoring. It's precise, factual, and always states exactly what commands it would run.
+The 8-step agent pattern: log, remember, think, log, learn, share, output.
 
 ```bash
-./agents/data.sh "Verify backup integrity for today"
+./agents/agent-1.sh "Describe what you would check to verify system health."
 ```
 
-### Aurora — The Health Monitor
+### agent-2 — Cross-Agent Coordination
 
-**Soul:** `souls/aurora.md`
-**Script:** `agents/aurora.sh`
+**Soul:** `souls/agent-2.md`
+**Script:** `agents/agent-2.sh`
 
-Aurora monitors system health, tracks metrics, and escalates issues. It uses severity levels (INFO, WARNING, CRITICAL) and always includes actionable next steps.
-
-```bash
-./agents/aurora.sh "Check disk usage and report any concerns"
-```
-
-### Lore — The Synthesizer
-
-**Soul:** `souls/lore.md`
-**Script:** `agents/lore.sh`
-
-Lore orchestrates and synthesizes. It reads learnings from all other agents and generates briefings. It maintains the big picture.
+Same 8-step pattern, plus reads other agents' shared learnings before composing context. This is how filesystem coordination works: agent-2 reads files that agent-1 wrote.
 
 ```bash
-./agents/lore.sh "Generate morning briefing from team learnings"
+./agents/agent-2.sh "Summarize what other agents have reported today."
 ```
 
 ## How Agents Work
@@ -83,28 +68,38 @@ Each agent script follows an 8-step pattern:
 8. OUTPUT   the result
 ```
 
-Lore adds a 9th step: **GATHER team learnings** (inserted between LOAD and COMPOSE). This is a specialization, not a universal step — specialist agents like Data and Aurora work from their own memory; only synthesizers need cross-agent context.
+Agent-2 adds a step between LOAD and COMPOSE: **GATHER team learnings** from the shared filesystem. This is a specialization — only agents that need cross-agent context do this.
 
 No magic. Just bash calling bash calling an LLM.
+
+## Stub Backend
+
+The `stub` backend makes the entire system runnable without LLM calls:
+
+```bash
+# Default — demo.sh uses stub automatically
+./demo.sh
+
+# Explicit
+AGEN_BACKEND=stub ./agents/agent-1.sh "test request"
+```
+
+The stub returns `"LLM return N"` with an incrementing counter. This lets you explore the architecture, verify the audit trail, and test scripts without API costs.
 
 ## Directory Structure
 
 ```
 shellclaw/
-├── agents/              # Agent scripts (the orchestration logic)
-│   ├── data.sh
-│   ├── aurora.sh
-│   └── lore.sh
+├── agents/              # Agent scripts (orchestration logic)
+│   ├── agent-1.sh       # Basic 8-step pattern
+│   └── agent-2.sh       # 8-step + cross-agent coordination
 ├── souls/               # Agent personalities (system prompts)
-│   ├── data.md
-│   ├── aurora.md
-│   └── lore.md
-├── skills/              # Reusable capabilities (optional)
+│   ├── agent-1.md
+│   └── agent-2.md
 ├── shared/              # Cross-agent coordination
 │   ├── learnings/       # Each agent writes here
-│   │   ├── data/
-│   │   ├── aurora/
-│   │   └── lore/
+│   │   ├── agent-1/
+│   │   └── agent-2/
 │   └── briefings/       # Generated summaries
 ├── logs/                # Execution logs (JSONL)
 ├── memory/              # Agent memories (Markdown)
@@ -119,9 +114,9 @@ shellclaw/
 
 **memory/** — Each agent gets a folder. Memories are Markdown files. Read them with `cat`, search with `grep`, version with `git`.
 
-**shared/learnings/** — Agents write what they learn here. Other agents can read it. This is how Lore knows what Data and Aurora discovered.
+**shared/learnings/** — Agents write what they learn here. Other agents can read it. This is how agent-2 knows what agent-1 discovered.
 
-**souls/** — The personality files. These are the system prompts that define how each agent behaves.
+**souls/** — The personality files. These are the system prompts that define how each agent behaves. They're deliberately minimal to show that soul files are a *parameter*, not an identity.
 
 ## Observability
 
@@ -133,12 +128,6 @@ The entire point of Shellclaw is that everything is inspectable.
 # What did all agents do today?
 agen-audit --today
 
-# What commands were run?
-agen-audit --today --event execution
-
-# Did anything mention "error"?
-agen-audit --today --grep "error"
-
 # Raw logs
 cat logs/all.jsonl | jq .
 ```
@@ -146,11 +135,11 @@ cat logs/all.jsonl | jq .
 ### Inspect Agent Memory
 
 ```bash
-# What does Data remember?
-cat memory/data/*.md
+# What does agent-1 remember?
+cat memory/agent-1/*.md
 
-# List Aurora's memory keys
-agen-memory list aurora
+# List memory keys
+agen-memory list agent-1
 
 # Diff memory between runs
 git diff memory/
@@ -161,23 +150,19 @@ git diff memory/
 ```bash
 # What did agents learn today?
 cat shared/learnings/*/$(date -I).md
-
-# Yesterday vs today
-diff shared/learnings/data/2024-01-14.md shared/learnings/data/2024-01-15.md
 ```
 
 ## Scheduled Coordination
 
-The `cron/morning-briefing.sh` script shows how agents can coordinate on a schedule:
+The `cron/morning-briefing.sh` script shows how agents coordinate on a schedule:
 
 ```bash
 # Add to crontab: 0 6 * * * /path/to/shellclaw/cron/morning-briefing.sh
 
 # What it does:
-# 1. Data runs morning backup verification
-# 2. Aurora runs morning health check
-# 3. Lore synthesizes a briefing from their learnings
-# 4. Briefing is saved to shared/briefings/
+# 1. agent-1 runs a morning check
+# 2. agent-2 synthesizes learnings into a briefing
+# 3. Briefing is saved to shared/briefings/
 ```
 
 No daemon. No message queue. Just cron calling scripts that write files.
@@ -188,8 +173,7 @@ No daemon. No message queue. Just cron calling scripts that write files.
 |----------|---------|---------|
 | `AGEN_LOG_DIR` | Where logs are written | `./logs` |
 | `AGEN_MEMORY_DIR` | Where memories are stored | `./memory` |
-| `AGEN_BACKEND` | LLM backend (claude-code, llm, api) | `auto` |
-| `AGEN_MODEL` | LLM model to use | `claude-sonnet-4-20250514` |
+| `AGEN_BACKEND` | LLM backend (claude-code, llm, api, stub) | `auto` |
 
 ## Required Tools
 
@@ -237,7 +221,7 @@ Research on inter-agent trust exploitation (Lupinacci et al., 2025) found that 8
 
 ### Guidelines
 
-**Never eval LLM output.** Skills should parse agen's output as data, not execute it as code. If the skill needs the LLM to choose an action, use a constrained vocabulary — the output must match one of N known strings.
+**Never eval LLM output.** Agent scripts should parse agen's output as data, not execute it as code. If the script needs the LLM to choose an action, use a constrained vocabulary — the output must match one of N known strings.
 
 **Treat soul files as immutable at runtime.** If an attacker can modify a soul file, they've modified the agent's identity. Mount `souls/` read-only in production, or checksum before use.
 
@@ -249,7 +233,7 @@ Research on inter-agent trust exploitation (Lupinacci et al., 2025) found that 8
 
 - **Web UI.** The interface is the terminal.
 - **Database.** The filesystem is the database.
-- **Plugin system.** Skills are executables. `chmod +x` is the plugin system.
+- **Plugin system.** Scripts are executables. `chmod +x` is the plugin system.
 - **Daemon.** Use cron, systemd, or launchd.
 - **Framework.** No base classes, no middleware. Scripts call primitives.
 
