@@ -12,8 +12,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 
-export AGEN_LOG_DIR="$PWD/logs"
-export AGEN_MEMORY_DIR="$PWD/memory"
+export AGENT_LOG_DIR="$PWD/logs"
+export AGENT_MEMORY_DIR="$PWD/memory"
 
 # Agent-1 gathers information; output discarded, side effects matter
 ./agents/agent-1.sh "Run a morning status check. Report anything notable." > /dev/null

@@ -2,7 +2,7 @@
 
 ## What Is This?
 
-Shellclaw is a reference implementation showing how the `agen-*` primitives compose into a working multi-agent system. Agents coordinate by writing files to a shared folder — no framework, no daemon, just bash scripts calling composable tools.
+Shellclaw is a reference implementation showing how Shell Agentics primitives compose into a working multi-agent system. Agents coordinate by writing files to a shared folder — no framework, no daemon, just bash scripts calling composable tools.
 
 Everything is inspectable. Every action is logged. Every memory is a file you can read. Every decision is traceable. You can `grep` through what your agents did, `diff` their memories between runs, and `cat` their execution traces.
 
@@ -22,7 +22,7 @@ cd shellclaw
 ./demo.sh
 
 # Run with a real LLM
-AGEN_BACKEND=claude-code ./demo.sh
+AGENT_BACKEND=claude-code ./demo.sh
 ```
 
 The demo runs agent-1, then agent-2 (which reads agent-1's shared learnings), and shows you the audit trail, memory state, and shared learnings.
@@ -58,11 +58,11 @@ Same 8-step pattern, plus reads other agents' shared learnings before composing 
 Each agent script follows an 8-step pattern:
 
 ```
-1. LOG      the incoming request (agen-log)
-2. LOAD     persistent memory (agen-memory read)
+1. LOG      the incoming request (alog)
+2. LOAD     persistent memory (amem read)
 3. COMPOSE  the full context as stdin
-4. CALL     the LLM (agen --system-file)
-5. LOG      the response (agen-log)
+4. CALL     the LLM (agent --system-file)
+5. LOG      the response (alog)
 6. EXTRACT  learnings and save to memory
 7. SHARE    learnings to shared filesystem
 8. OUTPUT   the result
@@ -81,7 +81,7 @@ The `stub` backend makes the entire system runnable without LLM calls:
 ./demo.sh
 
 # Explicit
-AGEN_BACKEND=stub ./agents/agent-1.sh "test request"
+AGENT_BACKEND=stub ./agents/agent-1.sh "test request"
 ```
 
 The stub returns `"LLM return N"` with an incrementing counter. This lets you explore the architecture, verify the audit trail, and test scripts without API costs.
@@ -126,7 +126,7 @@ The entire point of Shellclaw is that everything is inspectable.
 
 ```bash
 # What did all agents do today?
-agen-audit --today
+aaud --today
 
 # Raw logs
 cat logs/all.jsonl | jq .
@@ -139,7 +139,7 @@ cat logs/all.jsonl | jq .
 cat memory/agent-1/*.md
 
 # List memory keys
-agen-memory list agent-1
+amem list agent-1
 
 # Diff memory between runs
 git diff memory/
@@ -171,18 +171,18 @@ No daemon. No message queue. Just cron calling scripts that write files.
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `AGEN_LOG_DIR` | Where logs are written | `./logs` |
-| `AGEN_MEMORY_DIR` | Where memories are stored | `./memory` |
-| `AGEN_BACKEND` | LLM backend (claude-code, llm, api, stub) | `auto` |
+| `AGENT_LOG_DIR` | Where logs are written | `./logs` |
+| `AGENT_MEMORY_DIR` | Where memories are stored | `./memory` |
+| `AGENT_BACKEND` | LLM backend (claude-code, llm, api, stub) | `auto` |
 
 ## Required Tools
 
 Shellclaw requires the Shell Agentics primitives:
 
-- **agen** — LLM inference primitive ([github.com/shellagentics/agen](https://github.com/shellagentics/agen))
-- **agen-log** — Structured logger ([github.com/shellagentics/agen-log](https://github.com/shellagentics/agen-log))
-- **agen-memory** — Filesystem-backed memory ([github.com/shellagentics/agen-memory](https://github.com/shellagentics/agen-memory))
-- **agen-audit** — Log query tool ([github.com/shellagentics/agen-audit](https://github.com/shellagentics/agen-audit))
+- **agent** — LLM inference primitive ([github.com/shellagentics/agent](https://github.com/shellagentics/agent))
+- **alog** — Structured logger ([github.com/shellagentics/alog](https://github.com/shellagentics/alog))
+- **amem** — Filesystem-backed memory ([github.com/shellagentics/amem](https://github.com/shellagentics/amem))
+- **aaud** — Log query tool ([github.com/shellagentics/aaud](https://github.com/shellagentics/aaud))
 
 Plus standard Unix utilities: `bash`, `jq`, `date`, `cat`, `grep`.
 
@@ -221,7 +221,7 @@ Research on inter-agent trust exploitation (Lupinacci et al., 2025) found that 8
 
 ### Guidelines
 
-**Never eval LLM output.** Agent scripts should parse agen's output as data, not execute it as code. If the script needs the LLM to choose an action, use a constrained vocabulary — the output must match one of N known strings.
+**Never eval LLM output.** Agent scripts should parse agent's output as data, not execute it as code. If the script needs the LLM to choose an action, use a constrained vocabulary — the output must match one of N known strings.
 
 **Treat soul files as immutable at runtime.** If an attacker can modify a soul file, they've modified the agent's identity. Mount `souls/` read-only in production, or checksum before use.
 

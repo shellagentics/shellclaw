@@ -29,12 +29,12 @@ find_tool() {
   fi
 }
 
-AGEN=$(find_tool agen)
-AGEN_LOG=$(find_tool agen-log)
-AGEN_MEMORY=$(find_tool agen-memory)
+AGENT_BIN=$(find_tool agent)
+ALOG=$(find_tool alog)
+AMEM=$(find_tool amem)
 
-export AGEN_LOG_DIR="$SCRIPT_DIR/../logs"
-export AGEN_MEMORY_DIR="$SCRIPT_DIR/../memory"
+export AGENT_LOG_DIR="$SCRIPT_DIR/../logs"
+export AGENT_MEMORY_DIR="$SCRIPT_DIR/../memory"
 
 if [[ -z "$MSG" ]]; then
   echo "Usage: agent-2.sh <message>" >&2
@@ -42,10 +42,10 @@ if [[ -z "$MSG" ]]; then
 fi
 
 # Step 1: Log the request
-echo "$MSG" | "$AGEN_LOG" --agent "$AGENT" --event request
+echo "$MSG" | "$ALOG" --agent "$AGENT" --event request
 
 # Step 2: Load persistent memory
-MEMORY=$("$AGEN_MEMORY" read "$AGENT" 2>/dev/null || echo "No prior context.")
+MEMORY=$("$AMEM" read "$AGENT" 2>/dev/null || echo "No prior context.")
 
 # Step 3: Gather other agents' learnings from the shared filesystem
 TEAM_LEARNINGS=""
@@ -73,16 +73,16 @@ RESULT=$({
   echo ""
   echo "## Current Request"
   echo "$MSG"
-} | "$AGEN" --system-file "$SOUL" "Process this request and respond concisely.")
+} | "$AGENT_BIN" --system-file "$SOUL" "Process this request and respond concisely.")
 
 # Step 6: Log the response
-echo "$RESULT" | "$AGEN_LOG" --agent "$AGENT" --event complete
+echo "$RESULT" | "$ALOG" --agent "$AGENT" --event complete
 
 # Step 7: Extract and store learnings
-LEARNINGS=$(echo "$RESULT" | "$AGEN" --system "Extract key facts learned as brief bullet points. If nothing new was learned, output only: none" 2>/dev/null || true)
+LEARNINGS=$(echo "$RESULT" | "$AGENT_BIN" --system "Extract key facts learned as brief bullet points. If nothing new was learned, output only: none" 2>/dev/null || true)
 
 if [[ -n "$LEARNINGS" ]] && [[ "$LEARNINGS" != "none" ]]; then
-  echo "$LEARNINGS" | "$AGEN_MEMORY" write "$AGENT"
+  echo "$LEARNINGS" | "$AMEM" write "$AGENT"
 
   # Step 8: Share learnings to cross-agent filesystem
   mkdir -p "$SHARED/learnings/$AGENT"

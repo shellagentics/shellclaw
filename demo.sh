@@ -25,22 +25,22 @@ find_tool() {
   fi
 }
 
-AGEN_AUDIT=$(find_tool agen-audit)
-AGEN_MEMORY=$(find_tool agen-memory)
+AAUD=$(find_tool aaud)
+AMEM=$(find_tool amem)
 
 # --- Environment ---
 
-export AGEN_BACKEND="${AGEN_BACKEND:-stub}"
-export AGEN_LOG_DIR="$SCRIPT_DIR/logs"
-export AGEN_MEMORY_DIR="$SCRIPT_DIR/memory"
-mkdir -p "$AGEN_LOG_DIR" "$AGEN_MEMORY_DIR"
+export AGENT_BACKEND="${AGENT_BACKEND:-stub}"
+export AGENT_LOG_DIR="$SCRIPT_DIR/logs"
+export AGENT_MEMORY_DIR="$SCRIPT_DIR/memory"
+mkdir -p "$AGENT_LOG_DIR" "$AGENT_MEMORY_DIR"
 
 # Reset stub counter for a clean demo
-if [[ "$AGEN_BACKEND" == "stub" ]]; then
-  rm -f "${AGEN_STUB_FILE:-/tmp/agen-stub-counter}"
+if [[ "$AGENT_BACKEND" == "stub" ]]; then
+  rm -f "${AGENT_STUB_FILE:-/tmp/agent-stub-counter}"
 fi
 
-echo "=== Shellclaw Demo (backend: $AGEN_BACKEND) ==="
+echo "=== Shellclaw Demo (backend: $AGENT_BACKEND) ==="
 echo ""
 
 # --- Agent 1 ---
@@ -58,7 +58,7 @@ echo ""
 # --- Audit trail ---
 
 echo "=== Audit Trail ==="
-"$AGEN_AUDIT" --today --log-dir "$AGEN_LOG_DIR" --format pretty || echo "(no logs yet)"
+"$AAUD" --today --log-dir "$AGENT_LOG_DIR" --format pretty || echo "(no logs yet)"
 
 # --- Agent memory ---
 
@@ -66,7 +66,7 @@ echo ""
 echo "=== Agent Memory ==="
 for agent in agent-1 agent-2; do
   echo "[$agent]"
-  "$AGEN_MEMORY" list "$agent" --memory-dir "$AGEN_MEMORY_DIR" 2>/dev/null | sed 's/^/  /' || echo "  (no memory yet)"
+  "$AMEM" list "$agent" --memory-dir "$AGENT_MEMORY_DIR" 2>/dev/null | sed 's/^/  /' || echo "  (no memory yet)"
 done
 
 # --- Shared learnings ---
@@ -84,4 +84,4 @@ echo "Try:"
 echo "  cat logs/all.jsonl | jq ."
 echo "  cat memory/agent-1/_general.md"
 echo "  cat shared/learnings/agent-1/$(date -I).md"
-echo "  AGEN_BACKEND=claude-code ./demo.sh    # run with a real LLM"
+echo "  AGENT_BACKEND=claude-code ./demo.sh    # run with a real LLM"
